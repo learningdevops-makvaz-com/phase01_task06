@@ -1,0 +1,7 @@
+---
+- name: Setup database
+  hosts: database
+  tasks:
+
+    - name: message to remove
+      command: echo 'Here you gonna put all tasks and roles that gonna setup database'

@@ -1,0 +1,7 @@
+---
+- name: Deploy Wordpress
+  hosts: wordpress
+  tasks:
+
+    - name: message to remove
+      command: echo 'Here you gonna put all tasks and roles that gonna setup Wordpress application'
