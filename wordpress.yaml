@@ -1,6 +1,6 @@
 ---
 - name: Deploy Wordpress
-  hosts: wordpress 
+  hosts: "{{ host }}" 
   tasks:
 
     - name: Update repositories 

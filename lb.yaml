@@ -1,6 +1,6 @@
 ---
 - name: Setup Load Balancer
-  hosts: loadBalancer
+  hosts: lb 
   tasks:
     - name: Update repositories 
       become: true
@@ -94,3 +94,11 @@
     - name: Enabling the etc/exports file 
       become: true
       shell: "exportfs -a" 
+
+    - name: Opening Nginx with Firewalld
+      become: true 
+      shell: 'firewall-cmd --permanent --zone=public --add-port=80/tcp'
+    
+    - name: Refreshing Firewall
+      become: true 
+      shell: 'firewall-cmd --reload'
