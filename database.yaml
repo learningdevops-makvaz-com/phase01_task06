@@ -2,6 +2,58 @@
 - name: Setup database
   hosts: database
   tasks:
+    - name: Update repositories 
+      become: true
+      apt:
+        update_cache: yes
+        cache_valid_time: 86400 #A day
+        
+    - name: install mysql server
+      become: true
+      apt:
+        name: 
+          - mysql-server
+          - python3-pymysql  
+        state: present
 
-    - name: message to remove
-      command: echo 'Here you gonna put all tasks and roles that gonna setup database'
+        
+# Set MySQL root Password on Ansible/Ubuntu - https://linuxhint.com/set_mysql_root_password_ansible/ 
+    - name: Enable empty password for MySQL root user
+      become: true
+      shell: mysql -u root -e 'UPDATE mysql.user SET plugin="mysql_native_password"
+       WHERE user="root" AND host="localhost"; FLUSH PRIVILEGES;'
+
+    - name: Create SQL user 
+      mysql_user:
+        login_user: 'root'
+        login_password: ''
+        name: wp_user
+        host: '%'
+        password: wp_password
+        priv: "*.*:ALL"
+        state: present
+     
+    - name: Create DB for wordpress
+      mysql_db:
+        login_user: 'root'
+        login_password: ''
+        name: wp_db
+        state: present
+    
+    - name: Open MySQL port
+      become: true
+      ufw:
+        rule: allow
+        port: 3306
+        proto: tcp
+
+    - name: Update MySQL config
+      become: true
+      copy: src=/vagrant/mysqld.cnf dest=/etc/mysql/mysql.conf.d/ 
+
+    - name: Restart MySQL
+      become: true
+      systemd:
+        name: mysql
+        state: restarted
+

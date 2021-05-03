@@ -2,6 +2,7 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
+
   config.vm.define 'database' do |db|
     db.vm.box = "generic/ubuntu2004"
     db.ssh.insert_key = false
@@ -21,6 +22,8 @@ Vagrant.configure("2") do |config|
     ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3.8" }
     end
   end
+
+
   config.vm.define 'wordpress1' do |wp|
     wp.vm.box = "generic/ubuntu2004"
     wp.ssh.insert_key = false
@@ -37,10 +40,15 @@ Vagrant.configure("2") do |config|
     wp.vm.provision "ansible_local" do |ansible|
       ansible.playbook = "wordpress.yaml"
     ansible.verbose="v"
-    ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3.8" }
+    ansible.extra_vars = { 
+      ansible_python_interpreter: "/usr/bin/python3.8",
+      host_ip: "192.168.50.21"
+    }
     end
   end
-  config.vm.define 'wordpress1' do |wp|
+
+
+  config.vm.define 'wordpress2' do |wp|
     wp.vm.box = "generic/ubuntu2004"
     wp.ssh.insert_key = false
     wp.ssh.username = "vagrant"
@@ -56,15 +64,19 @@ Vagrant.configure("2") do |config|
     wp.vm.provision "ansible_local" do |ansible|
       ansible.playbook = "wordpress.yaml"
     ansible.verbose="v"
-    ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3.8" }
+    ansible.extra_vars = { 
+      ansible_python_interpreter: "/usr/bin/python3.8",
+      host_ip: "192.168.50.22"
+    }
     end
   end
+
   config.vm.define 'lb' do |lb|
     lb.vm.box = "generic/ubuntu2004"
     lb.ssh.insert_key = false
     lb.ssh.username = "vagrant"
     lb.vm.network "private_network", ip: "192.168.50.2"
-    lb.vm.hostname = "wordpress"
+    lb.vm.hostname = "lb"
     lb.vm.synced_folder ".", "/vagrant"
     lb.vm.provider "virtualbox" do |vb|
       vb.gui = false
@@ -78,4 +90,6 @@ Vagrant.configure("2") do |config|
     ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3.8" }
     end
   end
+
+
 end

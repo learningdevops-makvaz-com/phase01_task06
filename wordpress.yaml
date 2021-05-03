@@ -1,7 +1,128 @@
 ---
 - name: Deploy Wordpress
-  hosts: wordpress
+  hosts: wordpress 
   tasks:
 
-    - name: message to remove
-      command: echo 'Here you gonna put all tasks and roles that gonna setup Wordpress application'
+    - name: Update repositories 
+      become: true
+      apt:
+        update_cache: yes
+        cache_valid_time: 86400 #A day
+
+    - name: install php dependencies
+      become: true
+      apt:
+        name:
+          - php-cli
+          - php-fpm
+          - php-mysql
+          - php-json
+          - php-opcache
+          - php-mbstring
+          - php-xml
+          - php-gd
+          - php-curl
+        state: present
+     
+    - name: install MySQL Client
+      become: true
+      apt:
+        name: 
+          - mysql-client
+          - python3-pymysql  
+        state: present
+            
+    - name: Install nginx
+      become: true
+      apt:
+        name: nginx 
+        state: present
+
+    - name: Install NFS client package
+      become: true 
+      apt:
+        name: nfs-common
+        state: present 
+
+    - name: Open firewall for nginx
+      become: true
+      ufw:
+        rule: allow
+        name: 'Nginx Full'
+    
+    - name: Copy NGINX default settings file
+      become: true
+      copy:
+        src: /vagrant/default
+        dest: /etc/nginx/sites-enabled
+        force: yes
+
+    - name: Substitute IP address on nginx file
+      become: true
+      lineinfile:
+        path: /etc/nginx/sites-enabled/default
+        state: present
+        regexp: '\sserver_name.*$'
+        line: 'server_name {{ host_ip }};'
+
+
+    - name: Check if wp-cli exists
+      stat: path="/bin/wp"
+      register: wpcli_exist
+
+    - name: Download wp-cli
+      become: true
+      get_url:
+        url="https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar"
+        dest="/bin/wp"
+        force_basic_auth=yes
+        mode=0755
+      when: not wpcli_exist.stat.exists
+
+    - name: Checking if Wordpress folder is mounted
+      stat: path=/var/www/html/wordpress
+      register: wp_mounted
+
+    - name: Creating wordpress folder for mount    
+      become: true 
+      file:
+        path: /var/www/html/wordpress
+        state: directory
+      when: not wp_mounted.stat.exists
+
+
+    - name: Mounting the wp NFS directory    
+      become: true 
+      mount:
+        src: 192.168.50.2:/home/wordpress      
+        path: /var/www/html/wordpress
+        state: mounted
+        fstype: nfs
+      when: not wp_mounted.stat.exists
+
+
+    - name: Configure Wordpress DB Connection
+      become: true
+      copy:
+        src: /vagrant/wp-config.php
+        dest: /var/www/html/wordpress
+
+    - name: Configure Wordpress Admin User
+      become: true
+      shell: 'wp core install --url="192.168.50.2" --title="Mi Blog" --admin_user=admin --admin_email=danpal@example.com --admin_password="!2three456." --path=/var/www/html/wordpress --allow-root'
+
+  
+    - name: Activating twentynineteen wp theme
+      become: true
+      shell: 'wp theme install twentynineteen --activate --path=/var/www/html/wordpress --allow-root'  
+
+    - name: Giving Write permissions to the Wordpress Folder
+      become: true
+      shell: "chown -R www-data: /var/www/html/wordpress" 
+
+    - name: Refresh nginx
+      become: true
+      systemd: 
+        name: nginx
+        state: reloaded
+

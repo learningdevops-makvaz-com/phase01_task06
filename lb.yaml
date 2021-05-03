@@ -1,7 +1,96 @@
 ---
-- name: Deploy Load Balancer
-  hosts: wordpress
+- name: Setup Load Balancer
+  hosts: loadBalancer
   tasks:
+    - name: Update repositories 
+      become: true
+      apt:
+        update_cache: yes
+        cache_valid_time: 86400 #A day
 
-    - name: message to remove
-      command: echo 'Here you gonna put all tasks and roles that gonna setup Load Balancer'
+    - name: Install Nginx
+      become: true
+      apt:
+        name: nginx 
+        state: present
+
+    - name: Open firewall for nginx
+      become: true
+      ufw:
+        rule: allow
+        name: 'Nginx Full'
+    
+    - name: Copy NGINX settings file
+      become: true
+      copy:
+        src: /vagrant/load_balancer.conf
+        dest: /etc/nginx/conf.d/nginx.conf
+        force: yes
+
+    - name: Delete Redundant Nginx Settings
+      become: true
+      file:
+        state: absent
+        path: '{{ item }}'
+      with_items:
+        - /etc/nginx/sites-enabled/default
+        - /etc/nginx/sites-available/default  
+
+    - name: Refresh nginx
+      become: true
+      systemd: 
+        name: nginx
+        state: reloaded
+
+    - name: Install NFS server package
+      become: true 
+      apt:
+        name: nfs-kernel-server 
+        state: present 
+
+    - name: Checking if Wordpress is installed
+      stat: path=/home/wordpress
+      register: wp_installed
+
+    - name: Install Wordpress
+      become: true
+      unarchive:
+        src: https://wordpress.org/latest.tar.gz
+        dest: /home
+        remote_src: true
+      when: not wp_installed.stat.exists
+
+    - name: Loading the etc/exports file 
+      become: true
+      copy:
+        src: /vagrant/exports
+        dest: /etc/exports
+        force: yes
+
+
+    - name: Refresh NFS server service
+      become: true 
+      systemd:     
+        name: nfs-kernel-server
+        state: started
+  
+    - name: Install Firewalld
+      become: true 
+      apt:
+        name: firewalld
+        state: present
+
+    - name: Configuring Firewall
+      become: true 
+      shell: 'firewall-cmd --add-service {{item}}'
+      with_items:
+        - nfs
+        - nfs --permanent
+        - mountd
+        - mountd --permanent
+        - rpc-bind
+        - rpc-bind --permanent  
+
+    - name: Enabling the etc/exports file 
+      become: true
+      shell: "exportfs -a" 
