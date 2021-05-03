@@ -13,12 +13,6 @@
       apt:
         name: nginx 
         state: present
-
-    - name: Open firewall for nginx
-      become: true
-      ufw:
-        rule: allow
-        name: 'Nginx Full'
     
     - name: Copy NGINX settings file
       become: true
