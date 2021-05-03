@@ -20,6 +20,8 @@
         src: /vagrant/load_balancer.conf
         dest: /etc/nginx/conf.d/nginx.conf
         force: yes
+      notify:
+        - Refresh nginx
 
     - name: Delete Redundant Nginx Settings
       become: true
@@ -30,11 +32,6 @@
         - /etc/nginx/sites-enabled/default
         - /etc/nginx/sites-available/default  
 
-    - name: Refresh nginx
-      become: true
-      systemd: 
-        name: nginx
-        state: reloaded
 
     - name: Install NFS server package
       become: true 
@@ -60,13 +57,9 @@
         src: /vagrant/exports
         dest: /etc/exports
         force: yes
+      notify:
+        - Refresh NFS server service
 
-
-    - name: Refresh NFS server service
-      become: true 
-      systemd:     
-        name: nfs-kernel-server
-        state: started
   
     - name: Install Firewalld
       become: true 
@@ -96,3 +89,16 @@
     - name: Refreshing Firewall
       become: true 
       shell: 'firewall-cmd --reload'
+
+  handlers:
+    - name: Refresh nginx
+      become: true
+      systemd: 
+        name: nginx
+        state: reloaded
+
+    - name: Refresh NFS server service
+      become: true 
+      systemd:     
+        name: nfs-kernel-server
+        state: started
