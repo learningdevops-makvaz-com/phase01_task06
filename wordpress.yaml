@@ -48,7 +48,7 @@
       become: true
       ufw:
         rule: allow
-        name: 'Nginx Full'
+        port: 80
     
     - name: Copy NGINX default settings file
       become: true
@@ -67,11 +67,6 @@
         regexp: '\sserver_name.*$'
         line: 'server_name {{ host_ip }};'
 
-
-    - name: Check if wp-cli exists
-      stat: path="/bin/wp"
-      register: wpcli_exist
-
     - name: Download wp-cli
       become: true
       get_url:
@@ -79,7 +74,6 @@
         dest="/bin/wp"
         force_basic_auth=yes
         mode=0755
-      when: not wpcli_exist.stat.exists
 
     - name: Checking if Wordpress folder is mounted
       stat: path=/var/www/html/wordpress
