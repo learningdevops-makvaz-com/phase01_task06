@@ -49,8 +49,11 @@
 
     - name: Update MySQL config
       become: true
-      copy: src=/vagrant/mysqld.cnf dest=/etc/mysql/mysql.conf.d/ 
+      copy: src=/vagrant/mysqld.cnf dest=/etc/mysql/mysql.conf.d/
+      notify:
+      - Restart MySQL
 
+  handlers:
     - name: Restart MySQL
       become: true
       systemd:
