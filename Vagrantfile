@@ -30,7 +30,7 @@ Vagrant.configure("2") do |config|
     wp.vm.synced_folder ".", "/vagrant"
     wp.vm.provider "virtualbox" do |vb|
       vb.gui = false
-      vb.memory = 256
+      vb.memory = 512
       vb.linked_clone = false
     end
 
@@ -49,7 +49,7 @@ Vagrant.configure("2") do |config|
     wp.vm.synced_folder ".", "/vagrant"
     wp.vm.provider "virtualbox" do |vb|
       vb.gui = false
-      vb.memory = 256
+      vb.memory = 512
       vb.linked_clone = false
     end
 
