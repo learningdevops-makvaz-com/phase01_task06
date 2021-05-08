@@ -1,7 +1,32 @@
 ---
 - name: Deploy Load Balancer
-  hosts: wordpress
+  hosts: lb
+  become: yes
   tasks:
-
-    - name: message to remove
-      command: echo 'Here you gonna put all tasks and roles that gonna setup Load Balancer'
+    - name: Update
+      apt:
+        update_cache: yes
+    - name: Upgrade
+      apt:
+        upgrade: dist
+    - name: Install nginx 
+      apt:
+        name:
+          - nginx
+    - name: Copy over loadbalancer nginx configuration
+      copy:
+        src: /vagrant/loadbalancer.conf
+        dest: /etc/nginx/conf.d/
+      notify:
+        - Unlink default nginx site
+        - Restart Nginx service
+  handlers:
+    - name: Unlink default nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+        
+    - name: Restart Nginx service
+      service:
+        name: nginx
+        state: restarted

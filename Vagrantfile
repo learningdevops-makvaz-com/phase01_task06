@@ -17,6 +17,9 @@ Vagrant.configure("2") do |config|
 
     db.vm.provision "ansible_local" do |ansible|
       ansible.playbook = "database.yaml"
+      ansible.galaxy_role_file = 'requirements.yaml'
+      ansible.galaxy_roles_path = '/vagrant/.ansible/roles'
+      ansible.galaxy_command = 'ansible-galaxy collection install community.mysql'
     ansible.verbose="v"
     ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3.8" }
     end
@@ -30,7 +33,7 @@ Vagrant.configure("2") do |config|
     wp.vm.synced_folder ".", "/vagrant"
     wp.vm.provider "virtualbox" do |vb|
       vb.gui = false
-      vb.memory = 256
+      vb.memory = 1024
       vb.linked_clone = false
     end
 
@@ -49,7 +52,7 @@ Vagrant.configure("2") do |config|
     wp.vm.synced_folder ".", "/vagrant"
     wp.vm.provider "virtualbox" do |vb|
       vb.gui = false
-      vb.memory = 256
+      vb.memory = 1024
       vb.linked_clone = false
     end
 
@@ -68,7 +71,7 @@ Vagrant.configure("2") do |config|
     lb.vm.synced_folder ".", "/vagrant"
     lb.vm.provider "virtualbox" do |vb|
       vb.gui = false
-      vb.memory = 256
+      vb.memory = 512
       vb.linked_clone = false
     end
 

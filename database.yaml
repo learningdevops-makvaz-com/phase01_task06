@@ -1,7 +1,52 @@
 ---
 - name: Setup database
   hosts: database
+  become: yes
   tasks:
+    - name: update 
+      apt:
+        update_cache: yes
+    - name: upgrade
+      apt:
+        upgrade: dist
 
-    - name: message to remove
-      command: echo 'Here you gonna put all tasks and roles that gonna setup database'
+    - name: Install software 
+      apt:
+        name: 
+          - mysql-server
+          - python3-pip
+
+    - name: Pip install pyMySQL
+      pip:
+        name: pymysql
+      notify:
+        - Create Wordpress database
+ 
+    - name: Adjust mysql configuration file 
+      replace:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: "127.0.0.1"
+        replace: "0.0.0.0"
+      notify:
+        - Restart MySQL
+        - Create wordpress user  
+
+  handlers:
+    - name: Create Wordpress database
+      community.mysql.mysql_db:
+        login_unix_socket: /var/run/mysqld/mysqld.sock 
+        name: wordpress
+        state: present
+        # target: /vagrant/wordpress.sql
+        # force: yes
+    - name: Create wordpress user
+      community.mysql.mysql_user:
+        login_unix_socket: /var/run/mysqld/mysqld.sock 
+        name: wordpress
+        password: P@$$w0rd!
+        host: 192.168.50.%
+        priv: 'wordpress.*:ALL,GRANT'        
+    - name: Restart MySQL
+      service:
+        name: mysql 
+        state: restarted
