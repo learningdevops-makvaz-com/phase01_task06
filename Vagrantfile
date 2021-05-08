@@ -43,7 +43,7 @@ Vagrant.configure("2") do |config|
     ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3.8" }
     end
   end
-  config.vm.define 'wordpress1' do |wp|
+  config.vm.define 'wordpress2' do |wp|
     wp.vm.box = "generic/ubuntu2004"
     wp.ssh.insert_key = false
     wp.ssh.username = "vagrant"
