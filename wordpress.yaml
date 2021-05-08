@@ -1,6 +1,8 @@
 ---
 - name: Deploy Wordpress
-  hosts: wordpress1
+  hosts: 
+    - wordpress1
+    - wordpress2
   become: yes
   tasks:
     - name: Update system
